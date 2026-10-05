@@ -9,7 +9,7 @@ const LIMIT = 10;
 export function ProductProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [fetchingMore, setFetchingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");

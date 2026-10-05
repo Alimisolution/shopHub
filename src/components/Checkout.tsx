@@ -129,7 +129,7 @@ if (cart.length === 0 && !success) {
                 <PayPalButtons
                   style={{ layout: "vertical", color: "blue", shape: "rect", label: "paypal" }}
                   disabled={!isShippingValid}
-                  createOrder={(data, actions) => {
+                  createOrder={(_data, actions) => {
                     return actions.order.create({
                       intent: "CAPTURE",
                       purchase_units: [
@@ -143,7 +143,7 @@ if (cart.length === 0 && !success) {
                       ],
                     });
                   }}
-                  onApprove={(data, actions) => {
+                  onApprove={(_data, actions) => {
                     return actions.order!.capture().then((details) => {
                       handlePaymentSuccess(details);
                     });
