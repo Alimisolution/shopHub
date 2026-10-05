@@ -1,6 +1,6 @@
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, ShoppingBag } from "lucide-react";
+import { ShoppingCart, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
@@ -29,10 +29,9 @@ export default function Cart() {
             key={item.id}
             className="bg-white rounded-xl shadow-sm p-3 sm:p-4"
           >
-            {/* Mobile: Stack vertically | Desktop: Row layout */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               
-              {/* Product Image */}
+
               <div className="flex-shrink-0 mx-auto sm:mx-0">
                 <img
                   src={item.image}
@@ -41,7 +40,7 @@ export default function Cart() {
                 />
               </div>
 
-              {/* Product Details - Mobile: Centered | Desktop: Left-aligned */}
+              
               <div className="flex-1 min-w-0 text-center sm:text-left">
                 <h3 className="font-semibold text-gray-800 text-sm sm:text-base line-clamp-2">
                   {item.title}
@@ -51,7 +50,7 @@ export default function Cart() {
                 </p>
               </div>
 
-              {/* Quantity Controls - Mobile: Horizontal row | Desktop: Compact */}
+              
               <div className="flex items-center justify-center sm:justify-start gap-2 bg-gray-100 rounded-lg p-1.5 sm:p-1">
                 <button
                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -70,14 +69,14 @@ export default function Cart() {
                 </button>
               </div>
 
-              {/* Subtotal - Mobile: Full width | Desktop: Fixed width */}
+          
               <div className="text-center sm:text-right sm:w-24">
                 <p className="font-bold text-gray-800 text-base sm:text-lg">
                   ${(item.price * item.quantity).toFixed(2)}
                 </p>
               </div>
 
-              {/* Delete Button - Mobile: Bottom right | Desktop: Inline */}
+          
               <div className="flex justify-center sm:justify-end">
                 <button
                   onClick={() => removeFromCart(item.id)}
@@ -92,7 +91,7 @@ export default function Cart() {
         ))}
       </div>
 
-      {/* Total & Checkout - Sticky on mobile for easy access */}
+  
       <div className="mt-6 sm:mt-8 bg-white rounded-xl shadow-sm p-5 sm:p-6 sticky bottom-4 z-10 border border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <div>
