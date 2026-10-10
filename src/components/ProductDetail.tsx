@@ -3,6 +3,7 @@ import { ArrowLeft, Star, ShoppingCart, Check } from "lucide-react";
 import { useProducts } from "../context/ProductContext";
 import { useCart } from "../context/CartContext";
 import { useState } from "react";
+import { formatPrice } from "../utils/formatPrice";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -32,7 +33,7 @@ export default function ProductDetail() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
-      <button onClick={() => navigate("/")} className="mb-6 text-indigo-600 hover:underline font-medium flex items-center gap-2">
+      <button onClick={() => navigate("/")} className="mb-6 text-black hover:underline font-medium flex items-center gap-2">
         <ArrowLeft className="w-4 h-4" /> Back to products
       </button>
 
@@ -42,7 +43,7 @@ export default function ProductDetail() {
         </div>
 
         <div className="p-8 flex flex-col justify-center">
-          <p className="text-sm text-indigo-600 uppercase tracking-wider font-semibold mb-2">
+          <p className="text-sm text-black uppercase tracking-wider font-semibold mb-2">
             {product.category}
           </p>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
@@ -53,7 +54,7 @@ export default function ProductDetail() {
           </p>
 
           <div className="flex items-center gap-2 mb-6">
-            <div className="flex text-yellow-400">
+            <div className="flex text-black">
               {[...Array(5)].map((_, i) => (
                 <Star 
                   key={i} 
@@ -67,13 +68,13 @@ export default function ProductDetail() {
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-3xl font-bold text-indigo-600">
-              ${product.price.toFixed(2)}
+            <span className="text-3xl font-bold text-black">
+              {formatPrice(product.price)}
             </span>
             <button
               onClick={handleAddToCart}
               className={`px-6 py-3 rounded-xl font-semibold transition-all active:scale-95 flex items-center gap-2 ${
-                added ? "bg-green-500 text-white" : "bg-indigo-600 text-white hover:bg-indigo-700"
+                added ? "bg-green-500 text-white" : "bg-black text-white hover:bg-slate-900"
               }`}
             >
               {added ? <Check className="w-5 h-5" /> : <ShoppingCart className="w-5 h-5" />}

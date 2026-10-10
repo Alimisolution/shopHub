@@ -13,7 +13,7 @@ export default function SearchBar() {
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="w-full px-4 py-3 pl-11 rounded-xl border border-gray-200 
-                   focus:outline-none focus:ring-2 focus:ring-indigo-500 
+                   focus:outline-none focus:ring-2 focus:ring-black 
                    focus:border-transparent shadow-sm transition-all bg-white"
       />
     </div>

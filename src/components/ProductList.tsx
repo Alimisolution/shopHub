@@ -1,40 +1,14 @@
-import { useRef, useEffect } from "react";
 import { useProducts } from "../context/ProductContext";
 import ProductCard from "./ProductCard";
-import { Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ProductList() {
-  const { loading, fetchingMore, error, products, loadMore, hasMore } = useProducts();
-  
-
-  const observerTarget = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        
-        if (entries[0].isIntersecting && hasMore && !fetchingMore) {
-          loadMore();
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => {
-      if (observerTarget.current) {
-        observer.unobserve(observerTarget.current);
-      }
-    };
-  }, [hasMore, fetchingMore, loadMore]);
+  const { loading, error, products, currentPage, totalPages, goToPage } = useProducts();
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+        <div className="w-12 h-12 border-4 border-black rounded-full animate-spin" />
         <p className="text-gray-500 text-lg">Loading products...</p>
       </div>
     );
@@ -57,6 +31,23 @@ export default function ProductList() {
     );
   }
 
+
+  const getPageNumbers = () => {
+    const pages: (number | "...")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -64,21 +55,69 @@ export default function ProductList() {
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
-      
-      <div ref={observerTarget} className="h-24 flex items-center justify-center mt-8">
-        {fetchingMore && (
-          <div className="flex items-center gap-2 text-gray-500 font-medium">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Loading more products...</span>
-          </div>
-        )}
-        
-        {!hasMore && products.length > 0 && (
-          <p className="text-gray-400 text-sm font-medium bg-gray-100 px-4 py-2 rounded-full">
-            You've reached the end! 🎉
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="mt-10 flex flex-col items-center gap-4">
+          {/* Page Info */}
+          <p className="text-sm text-gray-500">
+            Page <span className="font-semibold test-grey-500">{currentPage}</span> of{" "}
+            <span className="font-semibold">{totalPages}</span>
           </p>
-        )}
-      </div>
+
+          {/* Pagination Buttons */}
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
+            {/* Previous Button */}
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium
+                         bg-white border border-gray-200 text-gray-700
+                         hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600
+                         disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white
+                         transition-all active:scale-95"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Prev</span>
+            </button>
+
+            {/* Page Numbers */}
+            {getPageNumbers().map((page, idx) =>
+              page === "..." ? (
+                <span key={`dots-${idx}`} className="px-2 text-gray-400">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={page}
+                  onClick={() => goToPage(page)}
+                  className={`min-w-[40px] h-10 rounded-lg text-sm font-medium transition-all active:scale-95 ${
+                    currentPage === page
+                      ? "bg-black text-white shadow-md shadow-indigo-200"
+                      : "bg-white border border-gray-200 text-gray-700 hover:bg-indigo-50 hover:border-indigo-300 hover:text-slate-900"
+                  }`}
+                >
+                  {page}
+                </button>
+              )
+            )}
+
+            {/* Next Button */}
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium
+                         bg-white border border-gray-200 text-gray-700
+                         hover:bg-indigo-50 hover:border-indigo-300 hover:black
+                         disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white
+                         transition-all active:scale-95"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

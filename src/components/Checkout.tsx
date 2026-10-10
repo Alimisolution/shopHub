@@ -3,6 +3,7 @@ import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Lock, ShoppingBag, Truck } from "lucide-react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { formatPrice } from "../utils/formatPrice";
 
 
 const initialOptions = {
@@ -54,7 +55,7 @@ if (cart.length === 0 && !success) {
         </p>
         <button
           onClick={() => navigate("/")}
-          className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
+          className="bg-black text-white px-8 py-3 rounded-xl font-semibold hover:bg-slate-900 transition-colors inline-flex items-center gap-2"
         >
           <ShoppingBag className="w-5 h-5" /> Continue Shopping
         </button>
@@ -71,19 +72,19 @@ if (cart.length === 0 && !success) {
         <div className="md:col-span-1">
           <div className="bg-white rounded-xl shadow-sm p-6 sticky top-24">
             <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-indigo-600" /> Order Summary
+              <ShoppingBag className="w-5 h-5 text-black" /> Order Summary
             </h2>
             <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
               {cart.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm">
                   <span className="text-gray-600 truncate mr-2">{item.title} × {item.quantity}</span>
-                  <span className="font-semibold whitespace-nowrap">${(item.price * item.quantity).toFixed(2)}</span>
+                  <span className="font-semibold whitespace-nowrap">{formatPrice(item.price * item.quantity)}</span>
                 </div>
               ))}
             </div>
             <div className="border-t pt-4 flex justify-between font-bold text-lg">
               <span>Total</span>
-              <span className="text-indigo-600">${totalPrice.toFixed(2)}</span>
+              <span className="text-black">{formatPrice(totalPrice)}</span>
             </div>
           </div>
         </div>
@@ -93,23 +94,23 @@ if (cart.length === 0 && !success) {
           {/* Shipping Form */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <Truck className="w-5 h-5 text-indigo-600" /> Shipping Details
+              <Truck className="w-5 h-5 text-black" /> Shipping Details
             </h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                 <input type="text" name="name" required value={shippingInfo.name} onChange={handleShippingChange} 
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="John Doe" />
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-black" placeholder="John Doe" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input type="email" name="email" required value={shippingInfo.email} onChange={handleShippingChange} 
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="john@example.com" />
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-black" placeholder="john@example.com" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Shipping Address</label>
                 <input type="text" name="address" required value={shippingInfo.address} onChange={handleShippingChange} 
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="123 Main St, City, Zip" />
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-black" placeholder="123 Main St, City, Zip" />
               </div>
             </div>
           </div>
@@ -117,7 +118,7 @@ if (cart.length === 0 && !success) {
           {/* Real PayPal Payment Section */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <Lock className="w-5 h-5 text-indigo-600" /> Secure Payment
+              <Lock className="w-5 h-5 text-black" /> Secure Payment
             </h2>
             
             {!isShippingValid ? (

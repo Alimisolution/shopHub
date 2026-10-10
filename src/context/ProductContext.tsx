@@ -1,79 +1,78 @@
-import { createContext, useContext, useState, useEffect, useMemo } from "react";
-import type { ReactNode  } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode, useMemo } from "react";
 import type { Product, ProductContextType } from "../types";
-import localData from "../data/products.json"; 
+import localData from "../data/products.json";
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
-const LIMIT = 10;
+const ITEMS_PER_PAGE = 10;
 
 export function ProductProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
-  const [fetchingMore, setFetchingMore] = useState(false);
-  const [error, _setError] = useState<string | null>(null);
-  
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [skip, setSkip] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  
+  // Derive categories locally
   const categories = useMemo(() => {
     const uniqueCats = [...new Set(localData.products.map((p: any) => p.category))];
     return ["all", ...uniqueCats];
   }, []);
 
 
+  // Filter products based on search and category
   const filteredProducts = useMemo(() => {
     return localData.products.filter((item: any) => {
-      
-      const matchesSearch = searchQuery 
-        ? item.category.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const matchesSearch = searchQuery
+        ? item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.title.toLowerCase().includes(searchQuery.toLowerCase())
         : true;
-        
       const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
-      
       return matchesSearch && matchesCategory;
     });
   }, [searchQuery, selectedCategory]);
 
-  const hasMore = skip < filteredProducts.length;
-  
-  const productsToDisplay = filteredProducts.slice(0, skip === 0 ? LIMIT : skip);
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
 
-  const products: Product[] = productsToDisplay.map((item: any) => ({
-    id: item.id,
-    title: item.title,
-    price: item.price,
-    description: item.description,
-    category: item.category,
-    image: item.thumbnail,
-    rating: {
-      rate: item.rating,
-      count: item.reviews ? item.reviews.length : 0,
-    },
-  }));
+  // Get products for the current page only
+  const products: Product[] = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    return filteredProducts.slice(start, end).map((item: any) => ({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      description: item.description,
+      category: item.category,
+      image: item.thumbnail,
+      rating: {
+        rate: item.rating,
+        count: item.reviews ? item.reviews.length : 0,
+      },
+    }));
+  }, [filteredProducts, currentPage]);
 
-  
+
+  // Simulate a tiny loading delay for UX
   useEffect(() => {
     setLoading(true);
+    setError(null);
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 400); 
+    }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategory]);
+  }, [currentPage, searchQuery, selectedCategory]);
 
+  
+  // Reset to page 1 when search or category changes
   useEffect(() => {
-    setSkip(0);
+    setCurrentPage(1);
   }, [searchQuery, selectedCategory]);
 
-  const loadMore = () => {
-    if (fetchingMore || !hasMore) return;
-    setFetchingMore(true);
-    
-    setTimeout(() => {
-      setSkip((prev) => prev + LIMIT);
-      setFetchingMore(false);
-    }, 400);
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   return (
@@ -81,15 +80,15 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       value={{
         products,
         loading,
-        fetchingMore,
-        hasMore,
-        loadMore,
         error,
         searchQuery,
         setSearchQuery,
         selectedCategory,
         setSelectedCategory,
         categories,
+        currentPage,
+        totalPages,
+        goToPage,
       }}
     >
       {children}

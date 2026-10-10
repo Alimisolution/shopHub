@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
 import type { Product } from "../types";
 import { useCart } from "../context/CartContext";
+import { formatPrice } from "../utils/formatPrice";
 
 interface Props {
   product: Product;
@@ -34,13 +35,13 @@ export default function ProductCard({ product }: Props) {
         </p>
 
         <div className="mt-auto flex items-center justify-between">
-          <span className="text-xl font-bold text-indigo-600">
-            ${product.price.toFixed(2)}
+          <span className="text-xl font-bold text-black">
+            {formatPrice(product.price)}
           </span>
           <button
             onClick={() => addToCart(product)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg 
-                       hover:bg-indigo-700 active:scale-95 transition-all text-sm font-medium flex items-center gap-2"
+            className="bg-black text-white px-4 py-2 rounded-lg 
+                       hover:bg-slate-900 active:scale-95 transition-all text-sm font-medium flex items-center gap-2"
           >
             <ShoppingCart className="w-4 h-4" />
             Add

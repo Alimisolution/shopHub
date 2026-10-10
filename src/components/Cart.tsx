@@ -1,6 +1,7 @@
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
+import { formatPrice } from "../utils/formatPrice";
 
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
@@ -10,7 +11,7 @@ export default function Cart() {
       <div className="text-center py-20 px-4">
         <ShoppingCart className="w-20 h-20 mx-auto text-gray-300 mb-4" />
         <p className="text-gray-500 text-lg mb-4">Your cart is empty.</p>
-        <Link to="/" className="text-indigo-600 hover:underline font-medium inline-flex items-center gap-2">
+        <Link to="/" className="text-black hover:underline font-medium inline-flex items-center gap-2">
           Continue shopping <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
@@ -45,8 +46,8 @@ export default function Cart() {
                 <h3 className="font-semibold text-gray-800 text-sm sm:text-base line-clamp-2">
                   {item.title}
                 </h3>
-                <p className="text-indigo-600 font-bold text-sm sm:text-base mt-1">
-                  ${item.price.toFixed(2)}
+                <p className="text-black font-bold text-sm sm:text-base mt-1">
+                  {formatPrice(item.price)}
                 </p>
               </div>
 
@@ -72,7 +73,7 @@ export default function Cart() {
           
               <div className="text-center sm:text-right sm:w-24">
                 <p className="font-bold text-gray-800 text-base sm:text-lg">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  {formatPrice(item.price * item.quantity)}
                 </p>
               </div>
 
@@ -96,8 +97,8 @@ export default function Cart() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-gray-500 text-sm">Total</p>
-            <p className="text-2xl sm:text-3xl font-bold text-indigo-600">
-              ${totalPrice.toFixed(2)}
+            <p className="text-2xl sm:text-3xl font-bold text-black">
+              {formatPrice(totalPrice)}
             </p>
           </div>
           <div className="text-right">
@@ -107,7 +108,7 @@ export default function Cart() {
         
         <Link
           to="/checkout"
-          className="w-full bg-indigo-600 text-white py-3.5 sm:py-4 rounded-xl font-semibold hover:bg-indigo-700 transition-colors active:scale-[0.98] flex items-center justify-center gap-2 text-base sm:text-lg shadow-lg shadow-indigo-200"
+          className="w-full bg-black text-white py-3.5 sm:py-4 rounded-xl font-semibold hover:bg-black transition-colors active:scale-[0.98] flex items-center justify-center gap-2 text-base sm:text-lg shadow-lg"
         >
           Proceed to Checkout <ArrowRight className="w-5 h-5" />
         </Link>

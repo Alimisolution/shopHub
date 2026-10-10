@@ -28,13 +28,13 @@ export interface CartContextType {
 export interface ProductContextType {
   products: Product[];
   loading: boolean;
-  fetchingMore: boolean; // New: true when loading the next page
-  hasMore: boolean;      // New: false when no more products exist
-  loadMore: () => void;  // New: function to trigger the next fetch
   error: string | null;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   categories: string[];
+  currentPage: number;
+  totalPages: number;
+  goToPage: (page: number) => void;
 }
