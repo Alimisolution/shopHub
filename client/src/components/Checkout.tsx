@@ -3,7 +3,7 @@ import { PaystackButton } from 'react-paystack';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, ShoppingBag, AlertCircle } from 'lucide-react';
+import { ShoppingBag, AlertCircle } from 'lucide-react';
 
 interface PaystackConfig {
   reference: string;
