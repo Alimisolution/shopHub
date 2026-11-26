@@ -20,6 +20,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use('/api/payment', paymentRoutes);
+console.log('✅ /api/payment routes mounted');
 
 app.get('/', (req, res) => {
   res.json({ message: 'ShopHub Backend is live!' });
