@@ -1,17 +1,18 @@
 import {type Request, type Response } from 'express';
 import axios from 'axios';
 
-const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
-const CLIENT_URL = process.env.CLIENT_URL;
-
-// 1. Initialize Payment
 export const initializePayment = async (req: Request, res: Response) => {
+  // ✅ Read the key INSIDE the function — by this time, dotenv has already run
+  const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY?.trim();
+
+  if (!SECRET_KEY) {
+    console.error('❌ PAYSTACK_SECRET_KEY is missing! Check server/.env');
+    return res.status(500).json({ status: false, message: 'Server misconfigured' });
+  }
+
   try {
     const { email, amount, reference } = req.body;
-
-    // Paystack requires amount in kobo (multiply Naira by 100)
-    // If using USD, ensure your Paystack account supports it, otherwise convert.
-    const amountInKobo = Math.round(amount * 100); 
+    const amountInKobo = Math.round(amount * 100);
 
     const response = await axios.post(
       'https://api.paystack.co/transaction/initialize',
@@ -19,11 +20,11 @@ export const initializePayment = async (req: Request, res: Response) => {
         email,
         amount: amountInKobo,
         reference,
-        callback_url: `${CLIENT_URL}/checkout/success`,
+        callback_url: 'http://localhost:5173/checkout/success',
       },
       {
         headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET}`,
+          Authorization: `Bearer ${SECRET_KEY}`,
           'Content-Type': 'application/json',
         },
       }
@@ -31,16 +32,20 @@ export const initializePayment = async (req: Request, res: Response) => {
 
     res.json(response.data);
   } catch (error: any) {
-    console.error('Paystack Initialization Error:', error.response?.data || error.message);
-    res.status(500).json({ 
-      status: false, 
-      message: 'Failed to initialize payment' 
-    });
+    console.error('Initialization Error:', error.response?.data || error.message);
+    res.status(500).json({ status: false, message: 'Failed to initialize payment' });
   }
 };
 
-// 2. Verify Payment (CRITICAL FOR ASSIGNMENT)
 export const verifyPayment = async (req: Request, res: Response) => {
+  // ✅ Read the key INSIDE the function
+  const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY?.trim();
+
+  if (!SECRET_KEY) {
+    console.error('❌ PAYSTACK_SECRET_KEY is missing! Check server/.env');
+    return res.status(500).json({ status: false, message: 'Server misconfigured' });
+  }
+
   try {
     const { reference } = req.params;
 
@@ -48,7 +53,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
       `https://api.paystack.co/transaction/verify/${reference}`,
       {
         headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET}`,
+          Authorization: `Bearer ${SECRET_KEY}`,
         },
       }
     );
@@ -56,15 +61,10 @@ export const verifyPayment = async (req: Request, res: Response) => {
     const { data } = response.data;
 
     if (data.status === 'success') {
-      // In a real app, you would update your database order status here.
-      res.json({ 
-        status: true, 
+      res.json({
+        status: true,
         message: 'Payment verified successfully',
-        data: {
-          reference: data.reference,
-          amount: data.amount / 100,
-          email: data.customer.email,
-        }
+        data: data,
       });
     } else {
       res.status(400).json({ status: false, message: 'Payment was not successful' });
