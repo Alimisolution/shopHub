@@ -12,6 +12,7 @@ interface PaystackConfig {
   publicKey: string;
   currency: string;
 }
+ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function Checkout() {
   const { cart, totalPrice, clearCart } = useCart();
@@ -106,9 +107,7 @@ export default function Checkout() {
     setIsProcessing(true);
     setError("");
     try {
-      const response = await fetch(
-        `/api/payment/verify/${reference.reference}`,
-      );
+     const response = await fetch(`${API_URL}/api/payment/verify/${reference.reference}`);
       const data = await response.json();
 
       await new Promise((r) => setTimeout(r, 500)); // let modal close
