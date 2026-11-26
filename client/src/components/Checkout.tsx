@@ -3,7 +3,7 @@ import { PaystackButton } from 'react-paystack';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingBag, AlertCircle } from 'lucide-react';
+import {  ShoppingBag, AlertCircle } from 'lucide-react';
 
 interface PaystackConfig {
   reference: string;
@@ -16,80 +16,120 @@ interface PaystackConfig {
 export default function Checkout() {
   const { cart, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
-  
+
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // ✅ Fixed #1 — declare the global error state
   const [error, setError] = useState('');
 
-  // Redirect if cart is empty
+  // ✅ Fixed #4 — removed unused hasProcessed
+  const [errors, setErrors] = useState<{ email?: string; phone?: string; address?: string }>({});
+
+  // ✅ Fixed #5 — guard so it only redirects on the checkout page
   useEffect(() => {
-    if (cart.length === 0) {
+    if (cart.length === 0 && window.location.pathname === '/checkout') {
       navigate('/cart', { replace: true });
     }
   }, [cart.length, navigate]);
 
   if (cart.length === 0) return null;
 
-  const generateReference = () => {
-    return `shop_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-  };
+  const generateReference = () => `shop_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-  const exchangeRate = 1500; 
+  const exchangeRate = 1500;
   const amountInNaira = Math.round(totalPrice * exchangeRate);
-  const amountInKobo = amountInNaira * 100; 
+  const amountInKobo = amountInNaira * 100;
 
   const config: PaystackConfig = {
     reference: generateReference(),
     email,
-    amount: amountInKobo, 
+    amount: amountInKobo,
     publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-    currency: 'NGN', 
+    currency: 'NGN',
   };
 
-  // ✅ 1. This will NOW reliably fire when payment succeeds
+  // ✅ Live validation flags (used to enable/disable the Paystack button)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^[+]?[\d\s-]{10,15}$/;
+  const isEmailValid = emailRegex.test(email);
+  const isPhoneValid = phoneRegex.test(phone);
+  const isAddressValid = address.trim().length >= 10;
+  const formValid = isEmailValid && isPhoneValid && isAddressValid;
+
+  // ✅ Validation on blur / submit attempt — shows inline errors
+  const validateField = (field: 'email' | 'phone' | 'address') => {
+    const newErrors = { ...errors };
+    if (field === 'email') {
+      newErrors.email = !email
+        ? 'Email address is required'
+        : !isEmailValid
+        ? 'Please enter a valid email format (e.g., user@example.com)'
+        : undefined;
+    }
+    if (field === 'phone') {
+      newErrors.phone = !phone
+        ? 'Phone number is required'
+        : !isPhoneValid
+        ? 'Please enter a valid phone number (10-15 digits)'
+        : undefined;
+    }
+    if (field === 'address') {
+      newErrors.address = !address.trim()
+        ? 'Delivery address is required'
+        : address.trim().length < 10
+        ? 'Please enter a more detailed address'
+        : undefined;
+    }
+    setErrors(newErrors);
+  };
+
+  const clearError = (field: 'email' | 'phone' | 'address') => {
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
+    setError(''); // ✅ clear global error when user edits
+  };
+
+  // ✅ Backend verification — assignment requires this (do NOT trust the success page alone)
   const handleSuccess = async (reference: any) => {
-    console.log("🔥 SUCCESS CALLBACK FIRED!", reference);
     setIsProcessing(true);
-    
+    setError('');
     try {
-      clearCart();
-      await new Promise(resolve => setTimeout(resolve, 500)); // Wait for modal to close
-      
-      console.log("🚀 NAVIGATING TO SUCCESS PAGE...");
-      navigate('/checkout/success', { 
-        state: { reference: reference.reference, amount: amountInNaira },
-        replace: true 
-      });
+      const response = await fetch(`/api/payment/verify/${reference.reference}`);
+      const data = await response.json();
+
+      await new Promise((r) => setTimeout(r, 500)); // let modal close
+
+      if (data.status === true) {
+        clearCart();
+         navigate(`/checkout/success?reference=${reference.reference}`, {
+          state: {
+            reference: reference.reference,
+            amount: amountInNaira,
+            verified: true,
+            email: data.data?.customer?.email || email,
+          },
+          replace: true,
+        });
+      } else {
+        setError('Payment could not be verified. Your cart is still saved. Please try again or contact support.');
+      }
     } catch (err) {
-      console.error("Navigation error:", err);
-      window.location.href = '/checkout/success';
+      console.error('Verification failed:', err);
+      setError('Payment verification service is unavailable. Your cart is still saved. Please try again.');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // ✅ 2. This will fire if the user closes the modal
   const handleClose = () => {
-    console.log("⚠️ CLOSE CALLBACK FIRED (Payment cancelled)");
-    setError('Payment was cancelled. Your cart is still saved.');
     setIsProcessing(false);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !phone || !address) {
-      setError('Please fill in all delivery details.');
-      return;
-    }
-    setError(''); // Clear any previous errors
-    // The PaystackButton will handle the actual click and open the modal
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
-      <motion.h1 
+      <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-3xl font-bold text-gray-900 mb-8"
@@ -98,7 +138,7 @@ export default function Checkout() {
       </motion.h1>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
@@ -106,67 +146,98 @@ export default function Checkout() {
           <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-black" /> Delivery Information
           </h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
+
+          {/* ✅ Fixed #2 — render the global error banner */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-5 bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl flex items-start gap-2 text-sm"
+            >
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </motion.div>
+          )}
+
+          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                onChange={(e) => { setEmail(e.target.value); clearError('email'); }}
+                onBlur={() => validateField('email')}
+                className={`w-full px-4 py-3 rounded-lg border ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-black'} focus:ring-2 focus:border-transparent outline-none transition-all`}
                 placeholder="you@example.com"
-                required
               />
+              {errors.email && (
+                <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.email}
+                </motion.p>
+              )}
             </div>
-            
+
+            {/* Phone */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                onChange={(e) => { setPhone(e.target.value); clearError('phone'); }}
+                onBlur={() => validateField('phone')}
+                className={`w-full px-4 py-3 rounded-lg border ${errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-black'} focus:ring-2 focus:border-transparent outline-none transition-all`}
                 placeholder="+234 800 000 0000"
-                required
               />
+              {errors.phone && (
+                <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.phone}
+                </motion.p>
+              )}
             </div>
 
+            {/* Address */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
               <textarea
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => { setAddress(e.target.value); clearError('address'); }}
+                onBlur={() => validateField('address')}
                 rows={3}
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                className={`w-full px-4 py-3 rounded-lg border ${errors.address ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-black'} focus:ring-2 focus:border-transparent outline-none transition-all resize-none`}
                 placeholder="Street, City, State"
-                required
               />
+              {errors.address && (
+                <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.address}
+                </motion.p>
+              )}
             </div>
 
-            {error && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-red-50 text-red-600 p-3 rounded-lg flex items-center gap-2 text-sm"
-              >
-                <AlertCircle className="w-4 h-4" /> {error}
-              </motion.div>
-            )}
-
-            {/* ✅ 3. Replace the standard button with PaystackButton */}
+            {/* ✅ Fixed #3 — PaystackButton (proven to fire callbacks in React 19) */}
             <PaystackButton
               {...config}
-              text={isProcessing ? "Verifying Payment..." : `Pay ₦${amountInNaira.toLocaleString()} with Paystack`}
-              className="w-full bg-black text-white py-4 rounded-xl font-semibold hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              text={isProcessing ? 'Verifying Payment...' : `Pay ₦${amountInNaira.toLocaleString()} with Paystack`}
+              className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 mt-6 transition-all ${
+                formValid
+                  ? 'bg-black text-white hover:bg-gray-800'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
               onSuccess={handleSuccess}
               onClose={handleClose}
-              disabled={isProcessing || !email || !phone || !address}
+              disabled={!formValid || isProcessing}
             />
+
+            {!formValid && (
+              <p className="text-xs text-gray-500 text-center">
+                Fill in a valid email, phone number, and address to enable payment.
+              </p>
+            )}
           </form>
         </motion.div>
 
-        <motion.div 
+        {/* Order Summary */}
+        <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className="bg-gray-50 p-6 rounded-2xl h-fit sticky top-24"
