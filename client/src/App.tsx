@@ -12,12 +12,14 @@ import AboutPage from './pages/AboutPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import ContactPage from './pages/ContactPage';
+import { ToastProvider } from './context/ToastContext';
 
 export default function App() {
   return (
     <BrowserRouter>
       <CartProvider>
         <ProductProvider>
+           <ToastProvider>
           <div className="min-h-screen bg-background flex flex-col">
             <Navbar />
             <main className="flex-1">
@@ -35,6 +37,7 @@ export default function App() {
             </main>
             <Footer />
           </div>
+          </ToastProvider>
         </ProductProvider>
       </CartProvider>
     </BrowserRouter>

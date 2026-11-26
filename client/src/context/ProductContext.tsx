@@ -58,7 +58,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     setError(null);
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 300);
+    }, 2500);
     return () => clearTimeout(timer);
   }, [currentPage, searchQuery, selectedCategory]);
 

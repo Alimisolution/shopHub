@@ -6,13 +6,14 @@ import { useProducts } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import { formatPrice } from '../utils/formatPrice';
 import PageTransition from '../components/PageTransition';
+import { useToast } from '../context/ToastContext';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { products } = useProducts();
   const { addToCart } = useCart();
-  
+   const { showToast } = useToast();
   const [addedToCart, setAddedToCart] = useState(false);
 
   // Force page to scroll to the very top when product changes
@@ -30,7 +31,7 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     if (product) {
       addToCart(product);
-      setAddedToCart(true);
+      showToast(`${product.title} added to cart!`);
       setTimeout(() => setAddedToCart(false), 2000);
     }
   };

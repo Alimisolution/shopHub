@@ -1,16 +1,20 @@
 import { useProducts } from "../context/ProductContext";
 import ProductCard from "./ProductCard";
-import SlideUp from "./SlideUp"; // ✅ Import SlideUp
+import ProductSkeleton from "./ProductSkeleton"; // ✅ Import Skeleton
+import SlideUp from "./SlideUp";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ProductList() {
   const { loading, error, products, currentPage, totalPages, goToPage } = useProducts();
 
+  // ✅ REPLACED SPINNER WITH SKELETON GRID
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin" />
-        <p className="text-text-secondary text-lg">Loading products...</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Render 8 skeletons to fill the screen while loading */}
+        {Array.from({ length: 8 }).map((_, index) => (
+          <ProductSkeleton key={index} />
+        ))}
       </div>
     );
   }
@@ -49,10 +53,9 @@ export default function ProductList() {
 
   return (
     <>
-      {/* ✅ Product Grid with Staggered Animations */}
+      {/* Product Grid with Staggered Animations */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {products.map((product, index) => (
-          // ✅ Wrap each card in SlideUp with a tiny delay (index * 0.05)
           <SlideUp key={product.id} delay={index * 0.05}>
             <ProductCard product={product} />
           </SlideUp>
